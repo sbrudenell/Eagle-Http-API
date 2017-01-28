@@ -1,9 +1,11 @@
 #!/usr/bin/env python
+from __future__ import division, print_function
+
 from lxml import etree
 from lxml import objectify
 import requests
 import copy
-from api_classes import *
+from eagle_http.api_classes import *
 import datetime
 
 
@@ -63,7 +65,7 @@ class eagle_http():
         if self.local:
             self.final_url = "https://" + self.user_name + ":" + \
                 self.user_password + "@eagle-" + self.user_name + ".local" + self.rurl
-            print self.final_url
+            print(self.final_url)
         else:
             self.final_url = self.host + ":" + str(self.port) + self.rurl
         try:
@@ -73,22 +75,22 @@ class eagle_http():
                 headers=request_headers,
                 verify=False)
             if self.noisy:
-                print self.final_url
-                print send_data
-                print self.req.text
+                print(self.final_url)
+                print(send_data)
+                print(self.req.text)
             if self.json:
                 returned_object = self.parse_json_response(self.req.text)
             else:
                 returned_object = self.parse_xml_response(self.req.text)
             self.write_history(send_data, self.req.text, returned_object)
         except Exception as e:
-            print "Exception raised: " + str(e)
+            print("Exception raised: " + str(e))
 
     def parse_xml_response(self, text):
         try:
             self.xmlTree = objectify.fromstring(text)
-            module = __import__('api_classes')
-            # print self.xmlTree.tag
+            module = __import__('eagle_http.api_classes', fromlist=('eagle_http',))
+            # print(self.xmlTree.tag)
             class_ = getattr(module, self.xmlTree.tag)
             instance = class_(self.json, self.xmlTree, text)
             setattr(self, self.xmlTree.tag, instance)
@@ -97,13 +99,13 @@ class eagle_http():
             raise
 
     def parse_json_response(self, text):
-        module = __import__('api_classes')
+        module = __import__('eagle_http.api_classes', fromlist=('eagle_http',))
         json_obj = json.loads(text)
         class_ = ""
         for key in json_obj:
             class_ = getattr(module, key)
             instance = class_(self.json, json_obj, text)
-            print instance
+            print(instance)
             setattr(self, key, instance)
             return instance
 
@@ -120,13 +122,13 @@ class eagle_http():
     def readback(self, readback_count=100):
         i = 0
         for item in reversed(self.history):
-            print "Item Number: " + str(i)
-            print "Datetime: " + str(item['time'])
-            print "Command Sent: " + str(item['command'])
-            print "SENT  --------------------------"
-            print str(item['sent'])
-            print "RECEIVED -----------------------"
-            print str(item['received'])
+            print("Item Number: " + str(i))
+            print("Datetime: " + str(item['time']))
+            print("Command Sent: " + str(item['command']))
+            print("SENT  --------------------------")
+            print(str(item['sent']))
+            print("RECEIVED -----------------------")
+            print(str(item['received']))
             if i > readback_count:
                 break
             i = i + 1
@@ -139,7 +141,7 @@ class eagle_http():
             self.mac_id.text = mac_id
             command_base.append(self.mac_id)
         if self.json == True:
-            print "json"
+            print("json")
             self.format_.text = 'JSON'
             command_base.append(self.format_)
         return command_base
@@ -249,6 +251,6 @@ if __name__ == '__main__':
     instance.set_schedule('demand', '0x000a', 'Y')
     instance.get_schedule('demand')
     instance.readback(100)
-    print instance.NetworkInfo
-    print instance.NetworkInfo.DeviceMacId
-    print instance.history[0]['command']
+    print(instance.NetworkInfo)
+    print(instance.NetworkInfo.DeviceMacId)
+    print(instance.history[0]['command'])
