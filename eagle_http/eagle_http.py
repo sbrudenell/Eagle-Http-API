@@ -105,7 +105,8 @@ class eagle_http():
         for key in json_obj:
             class_ = getattr(module, key)
             instance = class_(self.json, json_obj, text)
-            print(instance)
+            if self.noisy:
+                print(instance)
             setattr(self, key, instance)
             return instance
 
@@ -141,7 +142,8 @@ class eagle_http():
             self.mac_id.text = mac_id
             command_base.append(self.mac_id)
         if self.json == True:
-            print("json")
+            if self.noisy:
+                print("json")
             self.format_.text = 'JSON'
             command_base.append(self.format_)
         return command_base
