@@ -41,7 +41,7 @@ class eagle_http(object):
     cmd_set_schedule = "set_schedule"
     cmd_get_schedule = "get_schedule"
 
-    def __init__(self, uname, password, cloud_id, noisy=True, json=False):
+    def __init__(self, uname, password, cloud_id, noisy=False, json=False):
         self.user_name = uname
         self.user_password = password
         self.cloud_id = cloud_id
@@ -83,6 +83,7 @@ class eagle_http(object):
             else:
                 returned_object = self.parse_xml_response(self.req.text)
             self.write_history(send_data, self.req.text, returned_object)
+            return returned_object
         except Exception as e:
             print("Exception raised: " + str(e))
 
@@ -151,41 +152,41 @@ class eagle_http(object):
     def get_network_info(self, mac_id=None):
         self.command = self.compose_root(self.cmd_get_network_info, mac_id)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        self.send(self.xml_fragment, self.headers)
+        return self.send(self.xml_fragment, self.headers)
 
     def get_network_status(self, mac_id=None):
         self.command = self.compose_root(self.cmd_get_network_status, mac_id)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        self.send(self.xml_fragment, self.headers)
+        return self.send(self.xml_fragment, self.headers)
 
     def get_instantaneous_demand(self, mac_id=None):
         self.command = self.compose_root(
             self.cmd_get_instantaneous_demand, mac_id)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        self.send(self.xml_fragment, self.headers)
+        return self.send(self.xml_fragment, self.headers)
 
     def get_price(self, mac_id=None):
         self.command = self.compose_root(self.cmd_get_price, mac_id)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        self.send(self.xml_fragment, self.headers)
+        return self.send(self.xml_fragment, self.headers)
 
     def get_message(self, mac_id=None):
         self.command = self.compose_root(self.cmd_get_message, mac_id)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        self.send(self.xml_fragment, self.headers)
+        return self.send(self.xml_fragment, self.headers)
 
     def confirm_message(self, message_id, mac_id=None):
         self.command = self.compose_root(self.cmd_confirm_message, mac_id)
         self.msg_id.text = message_id
         self.command.append(self.msg_id)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        self.send(self.xml_fragment, self.headers)
+        return self.send(self.xml_fragment, self.headers)
 
     def get_current_summation(self, mac_id=None):
         self.command = self.compose_root(
             self.cmd_get_current_summation, mac_id)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        self.send(self.xml_fragment, self.headers)
+        return self.send(self.xml_fragment, self.headers)
 
     def get_history_data(self, start_time, end_time=None,
                          frequency=None, mac_id=None):
@@ -199,7 +200,7 @@ class eagle_http(object):
             self.history_frequency.text = frequency
             self.command.append(self.history_frequency)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        self.send(self.xml_fragment, self.headers)
+        return self.send(self.xml_fragment, self.headers)
 
     def set_schedule(self, event, frequency, enabled, mac_id=None):
         # event could be demand, summation,message,scheduled_prices, price,
@@ -213,21 +214,21 @@ class eagle_http(object):
         self.command.append(self.schedule_frequency)
         self.command.append(self.schedule_enabled)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        self.send(self.xml_fragment, self.headers)
+        return self.send(self.xml_fragment, self.headers)
 
     def get_schedule(self, event, mac_id=None):
         self.command = self.compose_root(self.cmd_get_schedule, mac_id)
         self.schedule_event.text = event
         self.command.append(self.schedule_event)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        self.send(self.xml_fragment, self.headers)
+        return self.send(self.xml_fragment, self.headers)
 
     def reboot(self, target, mac_id=None):
         self.command = self.compose_root(self.cmd_get_network_info, mac_id)
         self.target.text = target
         self.command.append(self.target)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        self.send(self.xml_fragment, self.headers)
+        return self.send(self.xml_fragment, self.headers)
 
 
 if __name__ == '__main__':
