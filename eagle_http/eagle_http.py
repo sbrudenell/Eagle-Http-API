@@ -40,13 +40,13 @@ class eagle_http():
     cmd_get_history_data = "get_history_data"
     cmd_set_schedule = "set_schedule"
     cmd_get_schedule = "get_schedule"
-    noisy = True
-    json = False
 
-    def __init__(self, uname, password, cloud_id):
+    def __init__(self, uname, password, cloud_id, noisy=True, json=False):
         self.user_name = uname
         self.user_password = password
         self.cloud_id = cloud_id
+        self.noisy = noisy
+        self.json = json
         self.construct_headers(
             self.cloud_id,
             self.user_name,
