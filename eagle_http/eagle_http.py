@@ -72,12 +72,14 @@ class eagle_http(object):
     cmd_set_schedule = "set_schedule"
     cmd_get_schedule = "get_schedule"
 
-    def __init__(self, uname, password, cloud_id, noisy=False, json=False):
+    def __init__(self, uname, password, cloud_id, noisy=False, json=False,
+                 keep_history=True):
         self.user_name = uname
         self.user_password = password
         self.cloud_id = cloud_id
         self.noisy = noisy
         self.json = json
+        self.keep_history = keep_history
         self.construct_headers(
             self.cloud_id,
             self.user_name,
@@ -113,7 +115,8 @@ class eagle_http(object):
                 returned_object = self.parse_json_response(self.req.text)
             else:
                 returned_object = self.parse_xml_response(self.req.text)
-            self.write_history(send_data, self.req.text, returned_object)
+            if self.keep_history:
+                self.write_history(send_data, self.req.text, returned_object)
             return returned_object.raw_obj
         except Exception as e:
             print("Exception raised: " + str(e))
