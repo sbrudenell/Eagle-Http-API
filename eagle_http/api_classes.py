@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from eagle_http.base_class import *
 from eagle_http.base_class import BaseCluster as MessageCluster
 from eagle_http.base_class import BaseCluster as TimeCluster
@@ -11,3 +13,4 @@ from eagle_http.base_class import BaseCluster as ScheduleInfo
 from eagle_http.base_class import BaseCluster as BlockPriceDetail
 from eagle_http.base_class import BaseCluster as HistoryData
 from eagle_http.base_class import BaseCluster as Error
+from eagle_http.base_class import BaseCluster as ScheduleList
