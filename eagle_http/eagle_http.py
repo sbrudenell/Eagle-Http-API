@@ -9,7 +9,7 @@ from eagle_http.api_classes import *
 import datetime
 
 
-class eagle_http():
+class eagle_http(object):
     host_local = 'eaf'
     host = 'https://rainforestcloud.com'
     port = 9445
