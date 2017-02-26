@@ -13,8 +13,10 @@ class BaseCluster():
         self.data = block_string
         if isJson:
             self.json_init(data)
+            self.raw_obj = data[list(data.keys())[0]]
         else:
             self.xml_init(data)
+            self.raw_obj = data
 
     def json_init(self, json_obj):
         for rootkey in json_obj:

@@ -1,12 +1,43 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, division, print_function
 
+import copy
+import datetime
+
 from lxml import etree
 from lxml import objectify
 import requests
 import copy
 from eagle_http.api_classes import *
 import datetime
+
+
+def _standardize_fields(response, value_fields, inplace=False):
+    if not response:
+        return response
+
+    if not inplace:
+        response = copy.deepcopy(response)
+    if 'Multiplier' in response:
+        response['Multiplier'] = int(response['Multiplier'], base=16)
+    if 'Divisor' in response:
+        response['Divisor'] = int(response['Divisor'], base=16)
+    for value in value_fields:
+        response[value] = int(response[value], base=16)
+        if 'Multiplier' in response and 'Divisor' in response:
+            response[value] = (response[value] *
+                               response['Multiplier'] /
+                               response['Divisor'])
+    if 'TimeStamp' in response:
+        # The timestamp is an offset in seconds from 00:00:00 01Jan2000 UTC
+        ts = int(response['TimeStamp'], base=16)
+        response['TimeStamp'] = (datetime.datetime(2000, 1, 1, 0, 0, 0, 0) +
+                                 datetime.timedelta(seconds=ts))
+    if 'DigitsRight' in response:
+        response['DigitsRight'] = int(response['DigitsRight'], base=16)
+    if 'DigitsLeft' in response:
+        response['DigitsLeft'] = int(response['DigitsLeft'], base=16)
+    return response
 
 
 class eagle_http(object):
@@ -83,7 +114,7 @@ class eagle_http(object):
             else:
                 returned_object = self.parse_xml_response(self.req.text)
             self.write_history(send_data, self.req.text, returned_object)
-            return returned_object
+            return returned_object.raw_obj
         except Exception as e:
             print("Exception raised: " + str(e))
 
@@ -163,12 +194,16 @@ class eagle_http(object):
         self.command = self.compose_root(
             self.cmd_get_instantaneous_demand, mac_id)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        return self.send(self.xml_fragment, self.headers)
+        response = self.send(self.xml_fragment, self.headers)
+        if self.json:
+            return _standardize_fields(response, ['Demand'], inplace=True)
 
     def get_price(self, mac_id=None):
         self.command = self.compose_root(self.cmd_get_price, mac_id)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        return self.send(self.xml_fragment, self.headers)
+        response = self.send(self.xml_fragment, self.headers)
+        if self.json:
+            return _standardize_fields(response, ['Price'], inplace=True)
 
     def get_message(self, mac_id=None):
         self.command = self.compose_root(self.cmd_get_message, mac_id)
@@ -186,7 +221,11 @@ class eagle_http(object):
         self.command = self.compose_root(
             self.cmd_get_current_summation, mac_id)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        return self.send(self.xml_fragment, self.headers)
+        response = self.send(self.xml_fragment, self.headers)
+        if self.json:
+            return _standardize_fields(response, ['SummationDelivered',
+                                                  'SummationReceived'],
+                                       inplace=True)
 
     def get_history_data(self, start_time, end_time=None,
                          frequency=None, mac_id=None):
