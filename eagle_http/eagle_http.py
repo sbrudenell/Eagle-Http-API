@@ -12,8 +12,12 @@ from eagle_http.api_classes import *
 import datetime
 
 
+# EAGLE uses timestamps in seconds since 00:00:00 01Jan2000 UTC
+DATE_OFFSET = datetime.datetime(2000, 1, 1, 0, 0, 0, 0)
+
+
 def _standardize_fields(response, value_fields, inplace=False):
-    if not response:
+    if not isinstance(response, dict):
         return response
 
     if not inplace:
@@ -23,16 +27,16 @@ def _standardize_fields(response, value_fields, inplace=False):
     if 'Divisor' in response:
         response['Divisor'] = int(response['Divisor'], base=16)
     for value in value_fields:
-        response[value] = int(response[value], base=16)
-        if 'Multiplier' in response and 'Divisor' in response:
-            response[value] = (response[value] *
-                               response['Multiplier'] /
-                               response['Divisor'])
+        if value in response:
+            response[value] = int(response[value], base=16)
+            if 'Multiplier' in response and 'Divisor' in response:
+                response[value] = (response[value] *
+                                   response['Multiplier'] /
+                                   response['Divisor'])
     if 'TimeStamp' in response:
         # The timestamp is an offset in seconds from 00:00:00 01Jan2000 UTC
         ts = int(response['TimeStamp'], base=16)
-        response['TimeStamp'] = (datetime.datetime(2000, 1, 1, 0, 0, 0, 0) +
-                                 datetime.timedelta(seconds=ts))
+        response['TimeStamp'] = DATE_OFFSET + datetime.timedelta(seconds=ts)
     if 'DigitsRight' in response:
         response['DigitsRight'] = int(response['DigitsRight'], base=16)
     if 'DigitsLeft' in response:
@@ -117,11 +121,13 @@ class eagle_http(object):
                 returned_object = self.parse_xml_response(self.req.text)
             if self.keep_history:
                 self.write_history(send_data, self.req.text, returned_object)
-            return returned_object.raw_obj
-        except Exception as e:
-            if self.noisy:
-                print("Exception raised: " + str(e))
+            if returned_object.json:
+                return returned_object.raw_obj
             else:
+                return returned_object
+        except Exception as e:
+            print("Exception raised: " + str(e))
+            if not self.noisy:
                 raise
 
     def parse_xml_response(self, text):
@@ -130,7 +136,7 @@ class eagle_http(object):
             module = __import__('eagle_http.api_classes', fromlist=('eagle_http',))
             # print(self.xmlTree.tag)
             class_ = getattr(module, self.xmlTree.tag)
-            instance = class_(self.json, self.xmlTree, text)
+            instance = class_(False, self.xmlTree, text)
             setattr(self, self.xmlTree.tag, instance)
             return instance
         except:
@@ -138,11 +144,14 @@ class eagle_http(object):
 
     def parse_json_response(self, text):
         module = __import__('eagle_http.api_classes', fromlist=('eagle_http',))
-        json_obj = json.loads(text)
+        try:
+            json_obj = json.loads(text)
+        except json.JSONDecodeError:
+            return self.parse_xml_response(text)
         class_ = ""
         for key in json_obj:
             class_ = getattr(module, key)
-            instance = class_(self.json, json_obj, text)
+            instance = class_(True, json_obj, text)
             if self.noisy:
                 print(instance)
             setattr(self, key, instance)
