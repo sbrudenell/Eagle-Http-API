@@ -119,7 +119,10 @@ class eagle_http(object):
                 self.write_history(send_data, self.req.text, returned_object)
             return returned_object.raw_obj
         except Exception as e:
-            print("Exception raised: " + str(e))
+            if self.noisy:
+                print("Exception raised: " + str(e))
+            else:
+                raise
 
     def parse_xml_response(self, text):
         try:
