@@ -147,7 +147,10 @@ class eagle_http(object):
         try:
             json_obj = json.loads(text)
         except json.JSONDecodeError:
-            return self.parse_xml_response(text)
+            try:
+                json_obj = json.loads("{%s}" % text)
+            except json.JSONDecodeError:
+                raise RuntimeError("Could not decode JSON: \n%s" % text)
         class_ = ""
         for key in json_obj:
             class_ = getattr(module, key)
@@ -212,6 +215,8 @@ class eagle_http(object):
         response = self.send(self.xml_fragment, self.headers)
         if self.json:
             return _standardize_fields(response, ['Demand'], inplace=True)
+        else:
+            return response
 
     def get_price(self, mac_id=None):
         self.command = self.compose_root(self.cmd_get_price, mac_id)
@@ -219,6 +224,8 @@ class eagle_http(object):
         response = self.send(self.xml_fragment, self.headers)
         if self.json:
             return _standardize_fields(response, ['Price'], inplace=True)
+        else:
+            return response
 
     def get_message(self, mac_id=None):
         self.command = self.compose_root(self.cmd_get_message, mac_id)
@@ -241,6 +248,8 @@ class eagle_http(object):
             return _standardize_fields(response, ['SummationDelivered',
                                                   'SummationReceived'],
                                        inplace=True)
+        else:
+            return response
 
     def get_history_data(self, start_time, end_time=None,
                          frequency=None, mac_id=None):
@@ -254,7 +263,14 @@ class eagle_http(object):
             self.history_frequency.text = frequency
             self.command.append(self.history_frequency)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
-        return self.send(self.xml_fragment, self.headers)
+        response = self.send(self.xml_fragment, self.headers)
+        if self.json:
+            return [_standardize_fields(elem['CurrentSummation'],
+                                        ['SummationDelivered',
+                                         'SummationReceived'])
+                    for elem in response]
+        else:
+            return response
 
     def set_schedule(self, event, frequency, enabled, mac_id=None):
         # event could be demand, summation,message,scheduled_prices, price,

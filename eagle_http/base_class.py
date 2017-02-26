@@ -20,8 +20,9 @@ class BaseCluster():
 
     def json_init(self, json_obj):
         for rootkey in json_obj:
-            for key in json_obj[rootkey]:
-                setattr(self, key, json_obj[rootkey][key])
+            if isinstance(json_obj[rootkey], dict):
+                for key in json_obj[rootkey]:
+                    setattr(self, key, json_obj[rootkey][key])
 
     def xml_init(self, xml):
         for element in xml.iterchildren():
