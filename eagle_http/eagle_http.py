@@ -121,7 +121,7 @@ class eagle_http(object):
                 returned_object = self.parse_xml_response(self.req.text)
             if self.keep_history:
                 self.write_history(send_data, self.req.text, returned_object)
-            if returned_object.json:
+            if returned_object and returned_object.json:
                 return returned_object.raw_obj
             else:
                 return returned_object
@@ -255,12 +255,12 @@ class eagle_http(object):
                          frequency=None, mac_id=None):
         self.command = self.compose_root(self.cmd_get_history_data, mac_id)
         self.command.append(self.history_start_time)
-        self.history_start_time.text = start_time
+        self.history_start_time.text = '0x%08x' % int(start_time)
         if end_time is not None:
-            self.history_end_time.text = end_time
+            self.history_end_time.text = '0x%08x' % int(end_time)
             self.command.append(self.history_end_time)
         if frequency is not None:
-            self.history_frequency.text = frequency
+            self.history_frequency.text = '0x%04x' % frequency
             self.command.append(self.history_frequency)
         self.xml_fragment = etree.tostring(self.command, pretty_print=True)
         response = self.send(self.xml_fragment, self.headers)
@@ -272,13 +272,13 @@ class eagle_http(object):
         else:
             return response
 
-    def set_schedule(self, event, frequency, enabled, mac_id=None):
+    def set_schedule(self, event, frequency, enabled='Y', mac_id=None):
         # event could be demand, summation,message,scheduled_prices, price,
         # billing_period,block_period,profile_data
         self.command = self.compose_root(self.cmd_set_schedule, mac_id)
         self.command.append(self.history_start_time)
         self.schedule_event.text = event
-        self.schedule_frequency.text = frequency
+        self.schedule_frequency.text = '0x%04x' % int(frequency)
         self.schedule_enabled.text = enabled
         self.command.append(self.schedule_event)
         self.command.append(self.schedule_frequency)

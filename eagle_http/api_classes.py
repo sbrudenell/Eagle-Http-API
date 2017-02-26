@@ -14,3 +14,4 @@ from eagle_http.base_class import BaseCluster as BlockPriceDetail
 from eagle_http.base_class import BaseCluster as HistoryData
 from eagle_http.base_class import BaseCluster as Error
 from eagle_http.base_class import BaseCluster as ScheduleList
+from eagle_http.base_class import BaseCluster as CommandResponse
